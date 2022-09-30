@@ -1,7 +1,11 @@
+<div align="center">
+
 # MAKE-A-VIDEO
 ### TEXT-TO-VIDEO GENERATION WITHOUT TEXT-VIDEO DATA
 
-![t2v_architecture.png](t2v_architecture.png)
+
+<img src="./t2v_architecture.png"  width="500px"></img>
+</div>
 
 ### Main components
 It consists of three main components:
@@ -14,8 +18,10 @@ T2V generation - a frame interpolation network for high frame rate generation
 ### Spaciotemporal layers
 #### 1. Pseudo-3D convolutional layers
 It stacks a 1D convolution following each 2D convolutional (conv) layer to facilitate information sharing between spacial and temporal axes with less computational power compared with 3D conv layers.
-![image](pseudo3d.png)
 
+<div align="center">
+<img src="./pseudo3d.png"  width="500px"></img>
+</div>
 
 #### 2. Pseudo-3D attention layers
 #### 3  Frame interpolation network
