@@ -34,8 +34,10 @@ def conv_S(output_channels: int, stride: Optional[Tuple[int, Tuple]] = 1,
                                   use_bias=False)
 
 
-def conv_T(in_planes, out_planes, stride=1, padding=1):
-    pass
+def conv_T(output_channels, stride=1, padding=1):
+
+    return tf.keras.layers.Conv3D(output_channels, kernel_size=[3, 1, 1], strides=stride, padding=padding,
+                                  use_bias=False)
 
 
 if __name__ == '__main__':
@@ -43,3 +45,5 @@ if __name__ == '__main__':
     input = tf.random.normal((20, 7, 3, 10, 50, 100))
     print(input.shape)
     print("Shape of the", m(input).shape)
+
+
