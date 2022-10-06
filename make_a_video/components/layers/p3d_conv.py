@@ -122,8 +122,13 @@ class P3D:
 
         spacial_padded_inputs = tf.pad(inputs, self.s_padding)
         spacial_p3d = spacial(spacial_padded_inputs)
+        spacial_p3d = tf.keras.layers.BatchNormalization(output_channels)(spacial_p3d)
+        spacial_p3d = tf.nn.relu(spacial_p3d)
+
         temporal_padded_inputs = tf.pad(inputs, self.t_padding)  # raw 'inputs' is fed
         temporal_p3d = temporal(temporal_padded_inputs)
+        temporal_p3d = tf.keras.layers.BatchNormalization(output_channels)(temporal_p3d)
+        temporal_p3d = tf.nn.relu(temporal_p3d)
 
         return temporal_p3d + spacial_p3d
 
