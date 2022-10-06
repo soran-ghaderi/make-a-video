@@ -6,15 +6,13 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
-
-
-
-
-
 class P3D:
+    def __init__(self):
+        self.s_padding = tf.constant([[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [0, 0]])
+        self.t_padding = tf.constant([[0, 0], [0, 0], [1, 1], [0, 0], [0, 0], [0, 0]])
 
     def conv_S(self, output_channels: int, stride: Optional[Tuple[int, Tuple]] = 1,
-               padding: Optional[str] = 'valid'):
+               padding: Optional[str] = 'same'):
         """Applies a 3D convolution over an input signal composed of several input planes.
 
         A (1, 3, 3) convolution layer as described in [1]_
@@ -40,8 +38,8 @@ class P3D:
         return tf.keras.layers.Conv3D(output_channels, kernel_size=[1, 3, 3], strides=stride, padding=padding,
                                       use_bias=False)
 
-    def conv_T(self, output_channels, stride=1, padding='valid'):
-        """Applies a 3D convolution over an input signal composed of several input planes.
+    def conv_T(self, output_channels, stride=1, padding='same'):
+        """Apply a 3D convolution over an input signal composed of several input planes.
 
         A (1, 3, 3) convolution layer as described in [1]_
 
@@ -68,14 +66,22 @@ class P3D:
                                       use_bias=False)
 
     def p3d_a(self, output_channels, inputs):
+
         spacial = self.conv_S(output_channels)
         temporal = self.conv_T(output_channels)
 
-        return temporal(spacial(inputs))
+        spacial_padded_inputs = tf.pad(inputs, self.s_padding)
+        spacial_p3d = spacial(spacial_padded_inputs)
+        temporal_padded_inputs = tf.pad(spacial_p3d, self.t_padding)
+        temporal_p3d = temporal(temporal_padded_inputs)
 
+        return temporal_p3d
 
+    def p3d_b(self, output_channels, inputs):
+        spacial = self.conv_S(output_channels, padding='same')
+        temporal = self.conv_T(output_channels, padding='same')
 
-
+        return tf.keras.activations.relu(spacial(inputs)) + tf.keras.activations.relu(temporal(inputs))
 
 
 if __name__ == '__main__':
@@ -85,10 +91,6 @@ if __name__ == '__main__':
     print(input.shape)
     # print("Shape of the", cs(input).shape)
     print(p3d.p3d_a(5, input).shape)
-    ct = p3d.conv_T(16)
+    print(p3d.p3d_b(5, input).shape)
     # print(input.shape)
     # print("Shape of the", ct(cs(input)).shape)
-
-
-
-
