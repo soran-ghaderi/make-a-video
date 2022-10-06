@@ -5,6 +5,8 @@ import tensorflow as tf
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+__all__ = ['P3D']
+
 
 class P3D:
     def __init__(self):
@@ -90,7 +92,6 @@ class P3D:
         spacial_p3d = spacial(spacial_padded_inputs)
         spacial_p3d = tf.keras.layers.BatchNormalization(output_channels)(spacial_p3d)
         spacial_p3d = tf.nn.relu(spacial_p3d)
-
 
         temporal_padded_inputs = tf.pad(spacial_p3d, self.t_padding)
         temporal_p3d = temporal(temporal_padded_inputs)
