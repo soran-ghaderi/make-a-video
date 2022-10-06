@@ -116,12 +116,29 @@ class P3D:
 
         spacial_padded_inputs = tf.pad(inputs, self.s_padding)
         spacial_p3d = spacial(spacial_padded_inputs)
-        temporal_padded_inputs = tf.pad(inputs, self.t_padding) # # raw 'inputs' is fed
+        temporal_padded_inputs = tf.pad(inputs, self.t_padding) # raw 'inputs' is fed
         temporal_p3d = temporal(temporal_padded_inputs)
 
         return temporal_p3d + spacial_p3d
 
     def p3d_c(self, output_channels, inputs):
+        """Return P3D-C as described in [1]_
+
+        References
+        ----------
+        [1] https://openaccess.thecvf.com/content_ICCV_2017/papers/Qiu_Learning_Spatio-Temporal_Representation_ICCV_2017_paper.pdf
+
+        Parameters
+        ----------
+        output_channels :
+            Number of channels produced by the convolution
+        inputs :
+            5+d input tensor
+        Returns
+        -------
+            out:
+                A tensor of rank 5+ representing
+        """
         spacial = self.conv_S(output_channels)
         temporal = self.conv_T(output_channels)
 
