@@ -12,7 +12,7 @@ class P3D:
         self.t_padding = tf.constant([[0, 0], [0, 0], [1, 1], [0, 0], [0, 0], [0, 0]])
 
     def conv_S(self, output_channels: int, stride: Optional[Tuple[int, Tuple]] = 1,
-               padding: Optional[str] = 'same'):
+               padding: Optional[str] = 'valid'):
         """Applies a 3D convolution over an input signal composed of several input planes.
 
         A (1, 3, 3) convolution layer as described in [1]_
@@ -38,7 +38,7 @@ class P3D:
         return tf.keras.layers.Conv3D(output_channels, kernel_size=[1, 3, 3], strides=stride, padding=padding,
                                       use_bias=False)
 
-    def conv_T(self, output_channels, stride=1, padding='same'):
+    def conv_T(self, output_channels, stride=1, padding='valid'):
         """Apply a 3D convolution over an input signal composed of several input planes.
 
         A (1, 3, 3) convolution layer as described in [1]_
@@ -94,10 +94,15 @@ class P3D:
         return temporal_p3d
 
     def p3d_b(self, output_channels, inputs):
-        spacial = self.conv_S(output_channels, padding='same')
-        temporal = self.conv_T(output_channels, padding='same')
+        spacial = self.conv_S(output_channels)
+        temporal = self.conv_T(output_channels)
 
-        return tf.keras.activations.relu(spacial(inputs)) + tf.keras.activations.relu(temporal(inputs))
+        spacial_padded_inputs = tf.pad(inputs, self.s_padding)
+        spacial_p3d = spacial(spacial_padded_inputs)
+        temporal_padded_inputs = tf.pad(inputs, self.t_padding)
+        temporal_p3d = temporal(temporal_padded_inputs)
+
+        return temporal_p3d + spacial_p3d
 
 
 if __name__ == '__main__':
