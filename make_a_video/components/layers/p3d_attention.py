@@ -116,10 +116,22 @@ class P3D:
 
         spacial_padded_inputs = tf.pad(inputs, self.s_padding)
         spacial_p3d = spacial(spacial_padded_inputs)
-        temporal_padded_inputs = tf.pad(inputs, self.t_padding)
+        temporal_padded_inputs = tf.pad(inputs, self.t_padding) # # raw 'inputs' is fed
         temporal_p3d = temporal(temporal_padded_inputs)
 
         return temporal_p3d + spacial_p3d
+
+    def p3d_c(self, output_channels, inputs):
+        spacial = self.conv_S(output_channels)
+        temporal = self.conv_T(output_channels)
+
+        spacial_padded_inputs = tf.pad(inputs, self.s_padding)
+        spacial_p3d = spacial(spacial_padded_inputs)
+        temporal_padded_inputs = tf.pad(spacial_p3d, self.t_padding) # spacial_p3d is fed
+        temporal_p3d = temporal(temporal_padded_inputs)
+
+        return temporal_p3d + spacial_p3d
+
 
 
 if __name__ == '__main__':
@@ -130,5 +142,4 @@ if __name__ == '__main__':
     # print("Shape of the", cs(input).shape)
     print(p3d.p3d_a(5, input).shape)
     print(p3d.p3d_b(5, input).shape)
-    # print(input.shape)
-    # print("Shape of the", ct(cs(input)).shape)
+    print(p3d.p3d_c(5, input).shape)
