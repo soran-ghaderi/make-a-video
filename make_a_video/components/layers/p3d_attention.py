@@ -67,6 +67,15 @@ class P3D:
         return tf.keras.layers.Conv3D(output_channels, kernel_size=[3, 1, 1], strides=stride, padding=padding,
                                       use_bias=False)
 
+    def p3d_a(self, output_channels, inputs):
+        spacial = self.conv_S(output_channels)
+        temporal = self.conv_T(output_channels)
+
+        return temporal(spacial(inputs))
+
+
+
+
 
 
 if __name__ == '__main__':
@@ -74,11 +83,11 @@ if __name__ == '__main__':
     cs = p3d.conv_S(16)
     input = tf.random.normal((20, 7, 20, 10, 50, 3))
     print(input.shape)
-    print("Shape of the", cs(input).shape)
-
+    # print("Shape of the", cs(input).shape)
+    print(p3d.p3d_a(5, input).shape)
     ct = p3d.conv_T(16)
-    print(input.shape)
-    print("Shape of the", ct(cs(input)).shape)
+    # print(input.shape)
+    # print("Shape of the", ct(cs(input)).shape)
 
 
 
