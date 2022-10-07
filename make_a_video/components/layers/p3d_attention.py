@@ -10,6 +10,14 @@ def unflatten(input_tensor, h, w):
     return einops.rearrange(input_tensor, '... (h w) -> ... h w', h=h, w=w)
 
 
+class Attention2D:
+    pass
+
+
+class Attention1D:
+    pass
+
+
 if __name__ == '__main__':
     input = tf.random.normal((10, 3, 7, 5, 5))
     print(input.shape)
