@@ -11,20 +11,7 @@ __all__ = ['P3D']
 class P3D:
     def __init__(self, output_channels: int = None, stride: Optional[Tuple[int, Tuple]] = 1,
                  padding: Optional[str] = 'valid'):
-        self.s_padding = tf.constant([[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [0, 0]])
-        self.t_padding = tf.constant([[0, 0], [0, 0], [1, 1], [0, 0], [0, 0], [0, 0]])
-        self.output_channels = output_channels
-        self.stride = stride
-        self.padding = padding
-
-    def conv_S(self):
-        """Applies a 3D convolution over an input signal composed of several input planes.
-
-        A (1, 3, 3) convolution layer as described in [1]_
-
-        References
-        ----------
-        [1] https://openaccess.thecvf.com/content_ICCV_2017/papers/Qiu_Learning_Spatio-Temporal_Representation_ICCV_2017_paper.pdf
+        """
 
         Parameters
         ----------
@@ -34,6 +21,22 @@ class P3D:
             Stride of the convolution. Default: 1
         padding :
             Padding added to all six sides of the input
+        """
+        self.s_padding = tf.constant([[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [0, 0]])
+        self.t_padding = tf.constant([[0, 0], [0, 0], [1, 1], [0, 0], [0, 0], [0, 0]])
+        self.output_channels = output_channels
+        self.stride = stride
+        self.padding = padding
+
+
+    def conv_S(self):
+        """Applies a 3D convolution over an input signal composed of several input planes.
+
+        A (1, 3, 3) convolution layer as described in [1]_
+
+        References
+        ----------
+        [1] https://openaccess.thecvf.com/content_ICCV_2017/papers/Qiu_Learning_Spatio-Temporal_Representation_ICCV_2017_paper.pdf
 
         Returns
         -------
@@ -54,15 +57,6 @@ class P3D:
         References
         ----------
         [1] https://openaccess.thecvf.com/content_ICCV_2017/papers/Qiu_Learning_Spatio-Temporal_Representation_ICCV_2017_paper.pdf
-
-        Parameters
-        ----------
-        output_channels :
-            Number of channels produced by the convolution
-        stride :
-            Stride of the convolution. Default: 1
-        padding :
-            Padding added to all six sides of the input
 
         Returns
         -------
@@ -94,8 +88,8 @@ class P3D:
             out:
                 A tensor of rank 5+ representing
         """
-        spacial = self.conv_S(output_channels)
-        temporal = self.conv_T(output_channels)
+        spacial = self.conv_S()
+        temporal = self.conv_T()
 
         spacial_padded_inputs = tf.pad(inputs, self.s_padding)
         spacial_p3d = spacial(spacial_padded_inputs)
@@ -127,8 +121,8 @@ class P3D:
             out:
                 A tensor of rank 5+ representing
         """
-        spacial = self.conv_S(output_channels)
-        temporal = self.conv_T(output_channels)
+        spacial = self.conv_S()
+        temporal = self.conv_T()
 
         spacial_padded_inputs = tf.pad(inputs, self.s_padding)
         spacial_p3d = spacial(spacial_padded_inputs)
@@ -160,8 +154,8 @@ class P3D:
             out:
                 A tensor of rank 5+ representing
         """
-        spacial = self.conv_S(output_channels)
-        temporal = self.conv_T(output_channels)
+        spacial = self.conv_S()
+        temporal = self.conv_T()
 
         spacial_padded_inputs = tf.pad(inputs, self.s_padding)
         spacial_p3d = spacial(spacial_padded_inputs)
@@ -176,8 +170,9 @@ class P3D:
         return temporal_p3d + spacial_p3d
 
 
+
 if __name__ == '__main__':
-    p3d = P3D()
+    p3d = P3D(5)
     # cs = p3d.conv_S(16)
     input = tf.random.normal((20, 7, 20, 10, 50, 3))
 
