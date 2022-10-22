@@ -2,6 +2,7 @@ import os
 from typing import Optional, Tuple
 
 import tensorflow as tf
+from einops import rearrange
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -28,7 +29,6 @@ class P3D:
         self.stride = stride
         self.padding = padding
 
-
     def conv_S(self):
         """Applies a 3D convolution over an input signal composed of several input planes.
 
@@ -41,7 +41,7 @@ class P3D:
         Returns
         -------
         out:
-            A tensor of rank 5+ representing
+            A tensor of rank 4+ representing
         """
         return tf.keras.layers.Conv3D(filters=self.output_channels,
                                       kernel_size=[1, 3, 3],
@@ -61,7 +61,7 @@ class P3D:
         Returns
         -------
         out:
-            A tensor of rank 5+ representing
+            A tensor of rank 4+ representing
         """
 
         return tf.keras.layers.Conv3D(filters=self.output_channels,
@@ -70,7 +70,7 @@ class P3D:
                                       padding=self.padding,
                                       use_bias=False)
 
-    def p3d_a(self, output_channels, inputs):
+    def p3d_a(self, inputs, convolve_across_time=True):
         """Return P3D-A as described in [1]_
 
         References
@@ -79,29 +79,43 @@ class P3D:
 
         Parameters
         ----------
-        output_channels :
-            Number of channels produced by the convolution
         inputs :
-            5+d input tensor
+            4+d input tensor
+        convolve_across_time :
+            Boolean indicate the convolution across time
         Returns
         -------
             out:
-                A tensor of rank 5+ representing
+                A tensor of rank 4+ representing
         """
         spacial = self.conv_S()
         temporal = self.conv_T()
+        b, c, *_, h, w = inputs.shape
 
-        spacial_padded_inputs = tf.pad(inputs, self.s_padding)
-        spacial_p3d = spacial(spacial_padded_inputs)
-        spacial_p3d = tf.keras.layers.BatchNormalization(output_channels)(spacial_p3d)
-        spacial_p3d = tf.nn.relu(spacial_p3d)
+        is_video = len(inputs.shape) == 5
 
-        temporal_padded_inputs = tf.pad(spacial_p3d, self.t_padding)
-        temporal_p3d = temporal(temporal_padded_inputs)
-        temporal_p3d = tf.keras.layers.BatchNormalization(output_channels)(temporal_p3d)
-        temporal_p3d = tf.nn.relu(temporal_p3d)
+        if is_video:
+            # convolve spatially
+            rearrange(inputs, "b c f h w -> (b f) c h w")
 
-        return temporal_p3d
+        # spacial_padded_inputs = tf.pad(inputs, self.s_padding)
+        x = spacial(inputs)
+        x = tf.keras.layers.BatchNormalization(self.output_channels)(x)
+        x = tf.nn.relu(x)
+
+        if is_video:
+            rearrange(x, "(b f) c h w -> b c f h w", b=b)
+
+        if convolve_across_time:
+            rearrange(x, "b c f h w -> (b h w) c f")
+
+            # temporal_padded_inputs = tf.pad(x, self.t_padding)
+            x = temporal(x)
+            x = tf.keras.layers.BatchNormalization(self.output_channels)(x)
+            x = tf.nn.relu(x)
+
+            rearrange(x, "(b h w) c f -> b c f h w", h=h, w=w)
+        return x
 
     def p3d_b(self, output_channels, inputs):
         """Return P3D-B as described in [1]_
@@ -115,11 +129,11 @@ class P3D:
         output_channels :
             Number of channels produced by the convolution
         inputs :
-            5+d input tensor
+            4+d input tensor
         Returns
         -------
             out:
-                A tensor of rank 5+ representing
+                A tensor of rank 4+ representing
         """
         spacial = self.conv_S()
         temporal = self.conv_T()
@@ -148,11 +162,11 @@ class P3D:
         output_channels :
             Number of channels produced by the convolution
         inputs :
-            5+d input tensor
+            4+d input tensor
         Returns
         -------
             out:
-                A tensor of rank 5+ representing
+                A tensor of rank 4+ representing
         """
         spacial = self.conv_S()
         temporal = self.conv_T()
@@ -169,6 +183,23 @@ class P3D:
 
         return temporal_p3d + spacial_p3d
 
+    def call(self, inputs: tf.Tensor, convolve_across_time: bool = True):
+        """
+
+        Parameters
+        ----------
+        inputs :
+            4+d input tensor
+        convolve_across_time :
+            Boolean indicate the convolution across time
+
+        Returns
+        -------
+            out:
+                A tensor of rank 4+ representing
+        """
+
+        return self.p3d_a(inputs, convolve_across_time)
 
 
 if __name__ == '__main__':
@@ -177,6 +208,6 @@ if __name__ == '__main__':
     input = tf.random.normal((20, 7, 20, 10, 50, 3))
 
     print("input shape: ", input.shape)
-    print("p3d_a shape: ", p3d.p3d_a(5, input).shape)
+    print("p3d_a shape: ", p3d.p3d_a(input).shape)
     print("p3d_b shape: ", p3d.p3d_b(5, input).shape)
     print("p3d_c shape: ", p3d.p3d_c(5, input).shape)
