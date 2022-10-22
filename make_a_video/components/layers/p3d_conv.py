@@ -9,12 +9,15 @@ __all__ = ['P3D']
 
 
 class P3D:
-    def __init__(self):
+    def __init__(self, output_channels: int = None, stride: Optional[Tuple[int, Tuple]] = 1,
+                 padding: Optional[str] = 'valid'):
         self.s_padding = tf.constant([[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [0, 0]])
         self.t_padding = tf.constant([[0, 0], [0, 0], [1, 1], [0, 0], [0, 0], [0, 0]])
+        self.output_channels = output_channels
+        self.stride = stride
+        self.padding = padding
 
-    def conv_S(self, output_channels: int, stride: Optional[Tuple[int, Tuple]] = 1,
-               padding: Optional[str] = 'valid'):
+    def conv_S(self):
         """Applies a 3D convolution over an input signal composed of several input planes.
 
         A (1, 3, 3) convolution layer as described in [1]_
@@ -37,10 +40,13 @@ class P3D:
         out:
             A tensor of rank 5+ representing
         """
-        return tf.keras.layers.Conv3D(output_channels, kernel_size=[1, 3, 3], strides=stride, padding=padding,
+        return tf.keras.layers.Conv3D(filters=self.output_channels,
+                                      kernel_size=[1, 3, 3],
+                                      strides=self.stride,
+                                      padding=self.padding,
                                       use_bias=False)
 
-    def conv_T(self, output_channels, stride=1, padding='valid'):
+    def conv_T(self):
         """Apply a 3D convolution over an input signal composed of several input planes.
 
         A (1, 3, 3) convolution layer as described in [1]_
@@ -64,7 +70,10 @@ class P3D:
             A tensor of rank 5+ representing
         """
 
-        return tf.keras.layers.Conv3D(output_channels, kernel_size=[3, 1, 1], strides=stride, padding=padding,
+        return tf.keras.layers.Conv3D(filters=self.output_channels,
+                                      kernel_size=[3, 1, 1],
+                                      strides=self.stride,
+                                      padding=self.padding,
                                       use_bias=False)
 
     def p3d_a(self, output_channels, inputs):
@@ -176,5 +185,3 @@ if __name__ == '__main__':
     print("p3d_a shape: ", p3d.p3d_a(5, input).shape)
     print("p3d_b shape: ", p3d.p3d_b(5, input).shape)
     print("p3d_c shape: ", p3d.p3d_c(5, input).shape)
-
-
